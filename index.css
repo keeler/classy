@@ -3,13 +3,11 @@ html, body, svg {
   height: 100%;
   margin: 0;
 }
-
 table {
-  border: 2px solid black;
-  table-layout: fixed;
   width: 100%;
 }
 
-td {
-    border: 1px dashed grey;
+table, th, td {
+  border: 1px solid black;
+  border-collapse: collapse;
 }

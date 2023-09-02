@@ -15,7 +15,6 @@ const handleFileUpload = (event) => {
 
   const reader = new FileReader();
   reader.onload = parseAndRenderFile;
-
   reader.readAsText(file);
 }
 
@@ -31,23 +30,62 @@ const parseAndRenderFile = (event) => {
   });
 
   const cleanData = cleanRawData(rawData);
-  console.log("CLEAN", cleanData)
+  const calendarHtml = renderCalendarHtml(cleanData);
+  const root = document.getElementById("root");
+  root.innerHTML = calendarHtml;
 };
 
 document.getElementById('fileinput').addEventListener('change', handleFileUpload);
+
+const renderCalendarHtml = (data) => {
+  const rooms = [...new Set(data.map(x => x.roomNumber))];
+
+  var calendar = "<table>"
+
+  // Set up multi-column header.
+  calendar += (
+    "<col>"
+    + [...Array(WEEKDAYS.length).keys()]
+        .map(x => `<colgroup span="${rooms.length}"></colgroup>`)
+        .join("")
+  );
+
+  // Render weekday headers.
+  calendar += (
+    `<tr>`
+    + `<td rowspan="2"><b>Time</b<</td>`
+    + WEEKDAYS.map(weekday => `<th colspan="${rooms.length}" scope="colgroup">${weekday}</th>`).join("\n")
+    + `</tr>`
+  );
+
+  // Render room number headers.
+  calendar += (
+    `<tr>`
+    + WEEKDAYS.map(weekday => {
+      return rooms.map(room => `<th scope="col">${room}</th>`).join("\n")
+    }).join("\n")
+    + `</tr>`
+  );
+
+  calendar += "</table>";
+
+  return calendar;
+}
 
 const cleanRawData = (rawData) => {
   const result = rawData
     .filter((row) => {
       return (
         row["Status"] !== "Reserved" &&
-        row["Start Time"] !== "" &&
-        row["End Time"] !== ""
+        row["Start Time"] &&
+        row["End Time"] &&
+        row["Room"]
       );
     })
     .map((row) => ({
       "subject": row["Subject"],
       "courseNumber": row["Course"],
+      "course": `${row["Subject"]} ${row["Course"]}`,
       "courseTitle": row["Title"],
       "courseId": row["CRN"],
       "startTime": row["Start Time"],
@@ -57,9 +95,6 @@ const cleanRawData = (rawData) => {
     }));
   return result;
 };
-
-const parseInputFile = (file) => {
-}
 
 // Parse a CSV row, accounting for commas inside quotes
 const parseCsvRow = (row) => {
@@ -81,36 +116,3 @@ const parseCsvRow = (row) => {
   entries.push(entry.join(''));
   return entries;
 }
-
-const createCalendarTable = (parentElement) => {
-  const table = document.createElement("table");
-  parentElement.appendChild(table);
-
-  const headerNames = ["Time", ...WEEKDAYS];
-  // Set up the table header.
-  const header = document.createElement("tr");
-  table.appendChild(header);
-  headerNames.forEach((weekday) => {
-    const colHeader = document.createElement("th");
-    colHeader.textContent = weekday;
-    header.appendChild(colHeader);
-  });
-
-  // Set up the table contents.
-  const tableBody = document.createElement("tbody");
-  table.appendChild(tableBody);
-  const numRows = (MAX_HOUR - MIN_HOUR) * 60 / MINUTES_PER_ROW;
-  [...Array(numRows).keys()].forEach((rowNumber) => {
-    const tableRow = document.createElement("tr");
-    tableBody.appendChild(tableRow);
-    headerNames.forEach((header, index) => {
-      const rowCell = document.createElement("td");
-      if (index === 0) {
-        rowCell.textContent = rowNumber * 5;
-      } else {
-        rowCell.textContent = header;
-      }
-      tableRow.appendChild(rowCell);
-    })
-  });
-};
