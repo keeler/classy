@@ -1,13 +1,47 @@
 document.addEventListener("DOMContentLoaded", (event) => main());
 
 const WEEKDAYS = "MTWRF".split("");
+const COLUMN_WIDTH = 150;
+const TOTAL_WIDTH = WEEKDAYS.length * COLUMN_WIDTH;
+const HOUR_HEIGHT = 60;
 const MIN_HOUR = 6; // 6am
 const MAX_HOUR = 17;  // 5pm
-const MINUTES_PER_ROW = 5;
+const TOTAL_HEIGHT = (MAX_HOUR - MIN_HOUR) * HOUR_HEIGHT;
+const TIME_LABEL_OFFSET = 50;
+
+const BUTTON_RADIUS = 20
 
 const main = () => {
     const rootElement = document.getElementById("root")
-    createCalendarTable(rootElement);
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg")
+    svg.setAttributeNS(null, "viewBox", "-1 0 1000 1000")
+
+    createCalendarGrid(svg)
+    root.appendChild(svg)
+}
+
+const createCalendarGrid = (svgElement) => {
+  const yOffset = 10;
+  const outsideBorder = createRect(TIME_LABEL_OFFSET, yOffset, TOTAL_WIDTH, TOTAL_HEIGHT);
+  svgElement.appendChild(outsideBorder);
+
+  WEEKDAYS.forEach((weekday, index) => {
+    const colX = TIME_LABEL_OFFSET + COLUMN_WIDTH * index;
+    const columnRect = createRect(colX, yOffset, COLUMN_WIDTH, TOTAL_HEIGHT);
+    svgElement.appendChild(columnRect);
+  });
+};
+
+const createRect = (x, y, w, h) => {
+  return getElement("rect", {"fill": "none", stroke: "black", "x": x, "y": y, "width": w, "height": h});
+};
+
+const getElement = (name, properties) => {
+    const element = document.createElementNS("http://www.w3.org/2000/svg", name)
+    for (const prop in properties) {
+        element.setAttributeNS(null, prop, properties[prop])
+    }
+    return element
 }
 
 const data = () => {
@@ -41,36 +75,3 @@ const data = () => {
     }
   ]
 }
-
-const createCalendarTable = (parentElement) => {
-  const table = document.createElement("table");
-  parentElement.appendChild(table);
-
-  const headerNames = ["Time", ...WEEKDAYS];
-  // Set up the table header.
-  const header = document.createElement("tr");
-  table.appendChild(header);
-  headerNames.forEach((weekday) => {
-    const colHeader = document.createElement("th");
-    colHeader.textContent = weekday;
-    header.appendChild(colHeader);
-  });
-
-  // Set up the table contents.
-  const tableBody = document.createElement("tbody");
-  table.appendChild(tableBody);
-  const numRows = (MAX_HOUR - MIN_HOUR) * 60 / MINUTES_PER_ROW;
-  [...Array(numRows).keys()].forEach((rowNumber) => {
-    const tableRow = document.createElement("tr");
-    tableBody.appendChild(tableRow);
-    headerNames.forEach((header, index) => {
-      const rowCell = document.createElement("td");
-      if (index === 0) {
-        rowCell.textContent = rowNumber * 5;
-      } else {
-        rowCell.textContent = header;
-      }
-      tableRow.appendChild(rowCell);
-    })
-  });
-};
