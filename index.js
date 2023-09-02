@@ -1,13 +1,92 @@
-document.addEventListener("DOMContentLoaded", (event) => main());
-
 const WEEKDAYS = "MTWRF".split("");
 const MIN_HOUR = 6; // 6am
 const MAX_HOUR = 17;  // 5pm
 const MINUTES_PER_ROW = 5;
 
-const main = () => {
-  const rootElement = document.getElementById("root")
-  createCalendarTable(rootElement);
+const handleFileUpload = (event) => {
+  if (event.target.files.length > 1) {
+    throw Error("Only one file upload allowed at a time.")
+  }
+
+  const file = event.target.files[0];
+  renderFile(file);
+}
+
+const renderFile = (file) => {
+  if (!file) {
+    alert("No file uploaded!")
+  }
+
+  const rawData = [];
+
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    const contents = event.target.result;
+    const lines = contents.split("\n");
+    var headers = [];
+
+    lines.forEach((line, index) => {
+      if (index === 0) {
+        headers = parseCsvRow(line);
+      } else {
+        const rowData = parseCsvRow(line);
+        const result = Object.fromEntries(headers.map((k, i) => [k, rowData[i]]));
+        rawData.push(result);
+      }
+    });
+  };
+
+  reader.readAsText(file);
+  console.log("rawDAta", rawData)
+  console.log("rawDAta2", rawData)
+
+
+
+}
+
+document.getElementById('fileinput').addEventListener('change', handleFileUpload);
+
+const cleanRawData = (rawData) => {
+  const filteredData = structuredClone(rawData).filter((row) => {
+      return true;
+   });
+  const result = filteredData.map((row) => (
+      {
+        "subject": row["Subject"],
+        "courseNumber": row["Course"],
+        "courseTitle": row["Title"],
+        "courseId": row["CRN"],
+        "startTime": row["Start Time"],
+        "endTime": row["End Time"],
+        "days": row["Days"],
+        "roomNumber": row["Room"],
+      }
+    ));
+  return result;
+};
+
+const parseInputFile = (file) => {
+}
+
+// Parse a CSV row, accounting for commas inside quotes
+const parseCsvRow = (row) => {
+  var insideQuote = false,
+      entries = [],
+      entry = [];
+  row.split('').forEach(function (character) {
+    if(character === '"') {
+      insideQuote = !insideQuote;
+    } else {
+      if(character == "," && !insideQuote) {
+        entries.push(entry.join(''));
+        entry = [];
+      } else {
+        entry.push(character);
+      }
+    }
+  });
+  entries.push(entry.join(''));
+  return entries;
 }
 
 const createCalendarTable = (parentElement) => {
@@ -74,26 +153,3 @@ const getScheduleData = () => {
     }
   ]
 }
-
-function readSingleFile(evt) {
-  var f = evt.target.files[0];
-  if (f) {
-    var r = new FileReader();
-    r.onload = function(e) {
-        var contents = e.target.result;
-        document.write("File Uploaded! <br />" + "name: " + f.name + "<br />" + "content: " + contents + "<br />" + "type: " + f.type + "<br />" + "size: " + f.size + " bytes <br />");
-
-        var lines = contents.split("\n"), output = [];
-        for (var i=0; i<lines.length; i++){
-          output.push("<tr><td>" + lines[i].split(",").join("</td><td>") + "</td></tr>");
-        }
-        output = "<table>" + output.join("") + "</table>";
-        document.write(output);
-   }
-    r.readAsText(f);
-    document.write(output);
-  } else {
-    alert("Failed to load file");
-  }
-}
-document.getElementById('fileinput').addEventListener('change', readSingleFile);
