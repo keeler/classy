@@ -9,59 +9,52 @@ const handleFileUpload = (event) => {
   }
 
   const file = event.target.files[0];
-  renderFile(file);
-}
-
-const renderFile = (file) => {
   if (!file) {
     alert("No file uploaded!")
   }
 
-  const rawData = [];
-
   const reader = new FileReader();
-  reader.onload = (event) => {
-    const contents = event.target.result;
-    const lines = contents.split("\n");
-    var headers = [];
-
-    lines.forEach((line, index) => {
-      if (index === 0) {
-        headers = parseCsvRow(line);
-      } else {
-        const rowData = parseCsvRow(line);
-        const result = Object.fromEntries(headers.map((k, i) => [k, rowData[i]]));
-        rawData.push(result);
-      }
-    });
-  };
+  reader.onload = parseAndRenderFile;
 
   reader.readAsText(file);
-  console.log("rawDAta", rawData)
-  console.log("rawDAta2", rawData)
-
-
-
 }
+
+const parseAndRenderFile = (event) => {
+  const contents = event.target.result;
+  const lines = contents.split("\n");
+  const headers = parseCsvRow(lines[0]);
+
+  const rawData = lines.slice(1).map((line, index) => {
+     const rowData = parseCsvRow(line);
+     const result = Object.fromEntries(headers.map((k, i) => [k, rowData[i]]));
+     return result;
+  });
+
+  const cleanData = cleanRawData(rawData);
+  console.log("CLEAN", cleanData)
+};
 
 document.getElementById('fileinput').addEventListener('change', handleFileUpload);
 
 const cleanRawData = (rawData) => {
-  const filteredData = structuredClone(rawData).filter((row) => {
-      return true;
-   });
-  const result = filteredData.map((row) => (
-      {
-        "subject": row["Subject"],
-        "courseNumber": row["Course"],
-        "courseTitle": row["Title"],
-        "courseId": row["CRN"],
-        "startTime": row["Start Time"],
-        "endTime": row["End Time"],
-        "days": row["Days"],
-        "roomNumber": row["Room"],
-      }
-    ));
+  const result = rawData
+    .filter((row) => {
+      return (
+        row["Status"] !== "Reserved" &&
+        row["Start Time"] !== "" &&
+        row["End Time"] !== ""
+      );
+    })
+    .map((row) => ({
+      "subject": row["Subject"],
+      "courseNumber": row["Course"],
+      "courseTitle": row["Title"],
+      "courseId": row["CRN"],
+      "startTime": row["Start Time"],
+      "endTime": row["End Time"],
+      "days": row["Days"],
+      "roomNumber": row["Room"],
+    }));
   return result;
 };
 
@@ -121,35 +114,3 @@ const createCalendarTable = (parentElement) => {
     })
   });
 };
-
-const getScheduleData = () => {
-  return [
-    {
-      department: "BIOL",
-      classNumber: 102,
-      startTime: "0800",
-      endTime: "0915",
-      days: "MWR",
-      building: "Hubbard",
-      roomNumber: 301,
-    },
-    {
-      department: "BIOL",
-      classNumber: 106,
-      startTime: "0900",
-      endTime: "1015",
-      days: "MR",
-      building: "Hubbard",
-      roomNumber: 401,
-    },
-    {
-      department: "CHEM",
-      classNumber: 206,
-      startTime: "0900",
-      endTime: "0945",
-      days: "MWR",
-      building: "McKinley",
-      roomNumber: 301,
-    }
-  ]
-}
