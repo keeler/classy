@@ -1,7 +1,6 @@
-const COLORS = ['#88CCEE', '#44AA99', '#117733', '#332288', '#DDCC77', '#999933','#CC6677', '#882255', '#AA4499', '#DDDDDD']
+const COLORS = ['#88CCEE', '#44AA99', '#117733', '#332288', '#DDCC77', '#999933', '#CC6677', '#882255', '#AA4499', '#DDDDDD']
 const WEEKDAYS = "MTWRF".split("");
-const WEEKDAY_LABELS = ["Mondays", "Tuesdays", "Wednesdays", "Thursdays", "Fridays"]
-const MINUTES_PER_ROW = 5;
+const WEEKDAY_LABELS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
 
 const handleFileUpload = (event) => {
   if (event.target.files.length > 1) {
@@ -27,16 +26,20 @@ const parseAndRenderFile = (event) => {
   const lines = contents.split("\n");
   const headers = parseCsvRow(lines[0]);
 
-  const rawData = lines.slice(1).map((line, index) => {
-     const rowData = parseCsvRow(line);
-     const result = Object.fromEntries(headers.map((k, i) => [k, rowData[i]]));
-     return result;
+  const rawData = lines.slice(1).map((line) => {
+    const rowData = parseCsvRow(line);
+    const result = Object.fromEntries(headers.map((k, i) => [k, rowData[i]]));
+    return result;
   });
 
+  // Render the calendar table.
   const cleanData = cleanRawData(rawData);
   const calendarHtml = renderCalendarHtml(cleanData);
   const root = document.getElementById("root");
   root.innerHTML = calendarHtml;
+
+  // Remove the file upload input.
+  document.getElementById("fileinput").outerHTML = "";
 };
 
 const renderCalendarHtml = (data) => {
@@ -57,7 +60,7 @@ const renderCalendarHtml = (data) => {
     + `<td rowspan="2"><b>Time</b<</td>`
     + WEEKDAYS.map((_, i) => (
       `<th colspan="${rooms.length}" scope="colgroup">${WEEKDAY_LABELS[i]}</th>`
-      )).join("\n")
+    )).join("\n")
     + `</tr>`
   );
 
@@ -110,7 +113,7 @@ const getCellContents = (data, rooms) => {
   const numRows = (maxHour - minHour) * 60 / minutesPerRow;
   const timeForRow = (rowNum) => {
     const t = minHour * 60 + rowNum * minutesPerRow;
-    const h = String(parseInt(t/60)).padStart(2, "0");
+    const h = String(parseInt(t / 60)).padStart(2, "0");
     const m = String(parseInt(t % 60)).padStart(2, "0");
     return `${h}:${m}`
   }
@@ -195,13 +198,13 @@ const cleanRawData = (rawData) => {
 // Parse a CSV row, accounting for commas inside quotes
 const parseCsvRow = (row) => {
   var insideQuote = false,
-      entries = [],
-      entry = [];
+    entries = [],
+    entry = [];
   row.split('').forEach(function (character) {
-    if(character === '"') {
+    if (character === '"') {
       insideQuote = !insideQuote;
     } else {
-      if(character == "," && !insideQuote) {
+      if (character == "," && !insideQuote) {
         entries.push(entry.join(''));
         entry = [];
       } else {
