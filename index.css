@@ -3,3 +3,45 @@ html, body, svg {
   height: 100%;
   margin: 0;
 }
+
+:root {
+  --innerBorderColor: lightGrey;
+}
+
+table {
+  width: 100%;
+  border: 1px solid black;
+  border-collapse: collapse;
+  font-size: small;
+}
+
+th {
+  border: 1px solid grey;
+  border-collapse: collapse;
+}
+
+td {
+  text-align: center;
+  border-collapse: collapse;
+}
+
+.courseTopCell {
+  border-top: 1px solid var(--innerBorderColor);
+  border-left: 1px solid var(--innerBorderColor);
+  border-right: 1px solid var(--innerBorderColor);
+}
+
+.courseCell {
+  border-left: 1px solid var(--innerBorderColor);
+  border-right: 1px solid var(--innerBorderColor);
+}
+
+.courseBottomCell {
+  border-left: 1px solid var(--innerBorderColor);
+  border-right: 1px solid var(--innerBorderColor);
+  border-bottom: 1px solid var(--innerBorderColor);
+}
+
+.emptyCell {
+  border: 1px solid var(--innerBorderColor);
+}

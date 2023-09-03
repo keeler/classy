@@ -1,210 +1,247 @@
-document.addEventListener("DOMContentLoaded", (event) => main());
-
+const COLORS = ['#88CCEE', '#44AA99', '#117733', '#332288', '#DDCC77', '#999933', '#CC6677', '#882255', '#AA4499', '#DDDDDD']
 const WEEKDAYS = "MTWRF".split("");
-const COLUMN_WIDTH = 100;
-const TOTAL_WIDTH = WEEKDAYS.length * COLUMN_WIDTH;
-const HOUR_HEIGHT = 30;
-const MIN_HOUR = 6; // 6am
-const MAX_HOUR = 17;  // 5pm
-const TOTAL_HEIGHT = (MAX_HOUR - MIN_HOUR) * HOUR_HEIGHT;
-const TIME_LABEL_OFFSET = 50;
+const WEEKDAY_LABELS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
 
-const main = () => {
-    const rootElement = document.getElementById("root");
-    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg.setAttributeNS(null, "viewBox", "-1 0 1000 1000");
-
-    createCalendarGrid(svg);
-    createClassRects(svg);
-    root.appendChild(svg);
-}
-
-const createCalendarGrid = (svgElement) => {
-  // Overall border rect
-  const yOffset = 10;
-  const outsideBorder = rect(
-    TIME_LABEL_OFFSET,
-    yOffset,
-    TOTAL_WIDTH,
-    TOTAL_HEIGHT,
-    {
-      fill: "none",
-      stroke: "black",
-    }
-  );
-  svgElement.appendChild(outsideBorder);
-
-  // Column rects + labels
-  WEEKDAYS.forEach((weekday, index) => {
-    const colX = getWeekdayX(weekday);
-    const columnRect = rect(
-      colX,
-      yOffset,
-      COLUMN_WIDTH,
-      TOTAL_HEIGHT,
-      {
-        fill: "none",
-        stroke: "black",
-      }
-    );
-    svgElement.appendChild(columnRect);
-
-    const labelX = colX + COLUMN_WIDTH / 2;
-    const labelText = weekday;
-    const colLabel = text(labelX, yOffset + HOUR_HEIGHT/2, labelText);
-    svgElement.appendChild(colLabel);
-  });
-
-  // Time lines + labels
-  const numHours = (MAX_HOUR - MIN_HOUR);
-  [...Array(numHours).keys()].forEach((i) => {
-    const lineY = getTimeY(i + MIN_HOUR);//(i + 1) * HOUR_HEIGHT;
-    const line = horizontalLine(
-      TIME_LABEL_OFFSET,
-      TIME_LABEL_OFFSET + TOTAL_WIDTH,
-      lineY,
-      {stroke: "grey"}
-    );
-    svgElement.appendChild(line);
-
-    const labelName = (MIN_HOUR + i).toString();
-    const label = text(0, lineY, labelName);
-    svgElement.appendChild(label);
-  });
-};
-
-const createClassRects = (svgElement) => {
-  const classes = getData();
-  classes.forEach((klass) => {
-    const classDays = klass.days.split("");
-    classDays.forEach((classDay) => {
-      // Rectangle for class
-      const classX = getWeekdayX(classDay);
-      const classTop = getTimeY(parseTime(klass.startTime));
-      const classBottom = getTimeY(parseTime(klass.endTime));
-      const rectHeight = classBottom - classTop;
-      const classRect = rect(
-        classX,
-        classTop,
-        COLUMN_WIDTH,
-        rectHeight,
-        {
-          fill: getColor(klass.department),
-          "fill-opacity": "0.4",
-          stroke: "black",
-          "stroke-dasharray": "5,5"
-        }
-      );
-      svgElement.append(classRect);
-
-      // Label for class
-      const classLabelText = `${klass.department} ${klass.classNumber}`;
-      const classLabel = text(
-        classX,
-        classTop,
-        classLabelText,
-        {
-          "font-size": "smaller",
-        }
-      )
-      svgElement.append(classLabel);
-    });
-  });
-}
-
-const getWeekdayX = (weekday) => {
-  const index = WEEKDAYS.indexOf(weekday);
-  const weekdayX = TIME_LABEL_OFFSET + COLUMN_WIDTH * index;
-  return weekdayX;
-}
-
-const getTimeY = (time) => {
-  const timeY = (time - MIN_HOUR + 1) * HOUR_HEIGHT;
-  return timeY;
-}
-
-const getColor = (department) => {
-  switch (department) {
-    case "BIOL":
-      return "green";
-    case "CHEM":
-      return "blue";
+const handleFileUpload = (event) => {
+  if (event.target.files.length > 1) {
+    alert("Only one file upload allowed at a time.");
+    return;
   }
+
+  const file = event.target.files[0];
+  if (!file) {
+    alert("No file uploaded!")
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = parseAndRenderFile;
+  reader.readAsText(file);
 }
 
-const parseTime = (timeString) => {
-  const hour = timeString.substr(0, 2);
-  const min = timeString.substr(2, 2);
-  const time = Number(hour) + Number(min)/60;
-  return time;
-}
+document.getElementById('fileinput').addEventListener('change', handleFileUpload);
 
-const text = (x, y, content, style) => {
-  const textElem = getElement("text", {
-    x: x,
-    y: y,
-    ...style
+const parseAndRenderFile = (event) => {
+  const contents = event.target.result;
+  const lines = contents.split("\n");
+  const headers = parseCsvRow(lines[0]);
+
+  const rawData = lines.slice(1).map((line) => {
+    const rowData = parseCsvRow(line);
+    const result = Object.fromEntries(headers.map((k, i) => [k, rowData[i]]));
+    return result;
   });
-  textElem.textContent = content;
-  return textElem;
-}
 
-const horizontalLine = (x1, x2, y, style) => {
-  return getElement("line", {
-    x1: x1,
-    x2: x2,
-    y1: y,
-    y2: y,
-    ...style
-  });
-}
+  // Render the calendar table.
+  const cleanData = cleanRawData(rawData);
+  const calendarHtml = renderCalendarHtml(cleanData);
+  const root = document.getElementById("root");
+  root.innerHTML = calendarHtml;
 
-const rect = (x, y, w, h, style) => {
-  return getElement("rect", {
-    x: x,
-    y: y,
-    width: w,
-    height: h,
-    ...style
-  });
+  // Remove the file upload input.
+  document.getElementById("fileinput").outerHTML = "";
 };
 
-const getElement = (name, properties) => {
-    const element = document.createElementNS("http://www.w3.org/2000/svg", name)
-    for (const prop in properties) {
-        element.setAttributeNS(null, prop, properties[prop])
-    }
-    return element
+const renderCalendarHtml = (data) => {
+  const rooms = unique(data.map(x => x.roomNumber)).sort();
+  var calendar = "<table>"
+
+  // Set up multi-column header.
+  calendar += (
+    "<col>"
+    + WEEKDAYS.map(x => (
+      `<colgroup span="${rooms.length}"></colgroup>`
+    )).join("")
+  );
+
+  // Render weekday headers.
+  calendar += (
+    `<tr>`
+    + `<td rowspan="2"><b>Time</b<</td>`
+    + WEEKDAYS.map((_, i) => (
+      `<th colspan="${rooms.length}" scope="colgroup">${WEEKDAY_LABELS[i]}</th>`
+    )).join("\n")
+    + `</tr>`
+  );
+
+  // Render room number headers.
+  calendar += (
+    `<tr>`
+    + WEEKDAYS.map(weekday => (
+      rooms.map(room => (
+        `<th scope="col">${room}</th>`
+      )).join("\n")
+    )).join("\n")
+    + `</tr>`
+  );
+
+  // Render courses as cells in table.
+  const cells = getCellContents(data, rooms);
+  calendar += cells.map(row => {
+    const rowContents = (
+      `<tr>`
+      + row.map((col, index) => {
+        if (index === 0) {
+          return `<th scope="row">${col.textContents}</th>`;
+        } else {
+          const cellStyle = col.style
+            ? `style="${Object.entries(col.style).map(([k, v]) => `${k}:${v}`).join(';')}"`
+            : "";
+          const cellClass = col.cssClass
+            ? `class=${col.cssClass}`
+            : "";
+          return `<td ${cellClass} ${cellStyle}>${col.textContents}</td>`
+        }
+      }).join("\n")
+      + `</tr>`
+    )
+    return rowContents;
+  }).join("\n");
+
+  calendar += "</table>";
+  return calendar;
 }
 
-const getData = () => {
-  return [
+const getCellContents = (data, rooms) => {
+  const parseTime = (timeStr) => {
+    const hour = timeStr.substr(0, 2);
+    const mins = timeStr.substr(3, 2);
+    const timeResult = Number(hour) + Number(mins) / 60;
+    return timeResult;
+  };
+
+  const minHour = Math.trunc(Math.min(...data.map(x => parseTime(x.startTime))));
+  const maxHour = Math.trunc(Math.max(...data.map(x => parseTime(x.endTime)))) + 1;
+
+  // One col for time, then for each room on each weekday.
+  const numCols = 1 + WEEKDAYS.length * rooms.length;
+  const minutesPerRow = 5;
+  const numRows = (maxHour - minHour) * 60 / minutesPerRow;
+  const timeForRow = (rowNum) => {
+    const t = minHour * 60 + rowNum * minutesPerRow;
+    const h = String(parseInt(t / 60)).padStart(2, "0");
+    const m = String(parseInt(t % 60)).padStart(2, "0");
+    return `${h}:${m}`
+  }
+  var cellsInGrid = range(numRows).map(r => range(numCols).map(c => (
     {
-      department: "BIOL",
-      classNumber: 102,
-      startTime: "0800",
-      endTime: "0915",
-      days: "MWR",
-      building: "Hubbard",
-      roomNumber: 301,
-    },
-    {
-      department: "BIOL",
-      classNumber: 106,
-      startTime: "0900",
-      endTime: "1015",
-      days: "MR",
-      building: "Hubbard",
-      roomNumber: 401,
-    },
-    {
-      department: "CHEM",
-      classNumber: 206,
-      startTime: "0900",
-      endTime: "0945",
-      days: "MWR",
-      building: "McKinley",
-      roomNumber: 301,
+      // Set first col to time.
+      textContents: c === 0 ? timeForRow(r) : " ",
+      style: {
+        "background-color": undefined,
+      },
+      cssClass: "emptyCell"
     }
-  ]
+  )));
+
+  // Map course names to colors. Some courses have class and lab, e.g. 210 and 210L.
+  // The lab and class of the same course should have the same color.
+  const courseNames = unique(data.map(x => x.name.replace(/L$/, ''))).sort();
+  if (courseNames.length > COLORS.length) {
+    alert("Not enough colors to display all courses");
+    return cellsInGrid;
+  }
+  const getColor = (courseName) => COLORS[courseNames.indexOf(courseName.replace(/L$/, ''))];
+
+  data.forEach((course) => {
+    course.days.split("").forEach((day) => {
+      const startTime = parseTime(course.startTime);
+      const endTime = parseTime(course.endTime);
+
+      const col = (
+        1 // For time column
+        + WEEKDAYS.indexOf(day) * rooms.length
+        + rooms.indexOf(course.roomNumber)
+      );
+      const firstRow = Math.trunc((startTime - minHour) * 60 / minutesPerRow);
+      const lastRow = Math.trunc((endTime - minHour) * 60 / minutesPerRow);
+      const middleRow = Math.trunc((lastRow + firstRow) / 2);
+
+      range(lastRow - firstRow + 1).forEach(i => {
+        row = i + firstRow;
+        const cellColor = getColor(course.name);
+        const currentCell = cellsInGrid[row][col];
+        currentCell.style["background-color"] = cellColor;
+        currentCell.style["color"] = pickTextColorBasedOnBgColorSimple(cellColor, "white", "black");
+        currentCell.cssClass = "courseCell";
+        if (row === firstRow) {
+          currentCell.textContents += course.startTime;
+          currentCell.cssClass = "courseTopCell";
+        } else if (row === middleRow) {
+          currentCell.textContents += course.subject
+          const nextCell = cellsInGrid[row + 1][col];
+          nextCell.textContents += course.number;
+        } else if (row === lastRow) {
+          currentCell.textContents += course.endTime;
+          currentCell.cssClass = "courseBottomCell";
+        }
+      });
+    })
+  });
+
+  return cellsInGrid;
+};
+
+const cleanRawData = (rawData) => {
+  const formatTime = (timeStr) => {
+    const padded = timeStr.padStart(4, "0");
+    const result = `${padded.substr(0, 2)}:${padded.substr(2, 2)}`;
+    return result;
+  }
+  const result = rawData
+    .filter((row) => {
+      return (
+        row["Status"] !== "Reserved" &&
+        row["Start Time"] &&
+        row["End Time"] &&
+        row["Room"] &&
+        row["Bldg"] == "HH"
+      );
+    })
+    .map((row) => ({
+      "subject": row["Subject"],
+      "number": row["Course"],
+      "name": `${row["Subject"]} ${row["Course"]}`,
+      "title": row["Title"],
+      "courseId": row["CRN"],
+      "startTime": formatTime(row["Start Time"]),
+      "endTime": formatTime(row["End Time"]),
+      "days": row["Days"],
+      "roomNumber": row["Room"],
+    }));
+
+  return result;
+};
+
+// Parse a CSV row, accounting for commas inside quotes
+const parseCsvRow = (row) => {
+  var insideQuote = false,
+    entries = [],
+    entry = [];
+  row.split('').forEach(function (character) {
+    if (character === '"') {
+      insideQuote = !insideQuote;
+    } else {
+      if (character == "," && !insideQuote) {
+        entries.push(entry.join(''));
+        entry = [];
+      } else {
+        entry.push(character);
+      }
+    }
+  });
+  entries.push(entry.join(''));
+  return entries;
 }
+
+const pickTextColorBasedOnBgColorSimple = (bgColor, lightColor, darkColor) => {
+  var color = (bgColor.charAt(0) === '#') ? bgColor.substring(1, 7) : bgColor;
+  var r = parseInt(color.substring(0, 2), 16); // hexToR
+  var g = parseInt(color.substring(2, 4), 16); // hexToG
+  var b = parseInt(color.substring(4, 6), 16); // hexToB
+  return (((r * 0.299) + (g * 0.587) + (b * 0.114)) > 186) ?
+    darkColor : lightColor;
+}
+
+const range = (n) => [...Array(n).keys()];
+const unique = (items) => [...new Set(items)];
