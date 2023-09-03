@@ -30,7 +30,7 @@ td {
 }
 
 :root {
-  --innerBorderColor: lightGrey;
+  --innerBorderColor: silver;
 }
 
 .courseTopCell {

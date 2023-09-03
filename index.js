@@ -123,16 +123,29 @@ const getCellContents = (data, rooms) => {
     const m = String(parseInt(t % 60)).padStart(2, "0");
     return `${h}:${m}`
   }
-  var cellsInGrid = range(numRows).map(r => range(numCols).map(c => (
-    {
+  var cellsInGrid = range(numRows).map(r => range(numCols).map(c => {
+    const isTuesdayOrThursday = () => {
+      const dayOfWeek = (
+        Math.trunc(
+          (c - 1)  // Subtract first col for time.
+          / rooms.length
+        )
+      )
+      return [1, 3].includes(dayOfWeek)
+    }
+    return {
       // Set first col to time.
       textContents: c === 0 ? timeForRow(r) : " ",
       style: {
-        "background-color": undefined,
+        "background-color": (
+          isTuesdayOrThursday()
+          ? "lightGrey"
+          : "white"
+        ),
       },
       cssClass: "emptyCell"
     }
-  )));
+  }));
 
   // Map course names to colors. Some courses have class and lab, e.g. 210 and 210L.
   // The lab and class of the same course should have the same color.
