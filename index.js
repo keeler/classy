@@ -167,7 +167,9 @@ const getCellContents = (data, rooms) => {
           currentCell.textContents += course.startTime;
           currentCell.cssClass = "courseTopCell";
         } else if (row === middleRow) {
-          currentCell.textContents += course.name;
+          currentCell.textContents += course.subject
+          const nextCell = cellsInGrid[row + 1][col];
+          nextCell.textContents += course.number;
         } else if (row === lastRow) {
           currentCell.textContents += course.endTime;
           currentCell.cssClass = "courseBottomCell";
