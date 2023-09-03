@@ -103,8 +103,8 @@ const renderCalendarHtml = (data) => {
 
 const getCellContents = (data, rooms) => {
   const parseTime = (timeStr) => {
-    const hour = timeStr.padStart(4, "0").substr(0, 2);
-    const mins = timeStr.padStart(4, "0").substr(2, 2);
+    const hour = timeStr.substr(0, 2);
+    const mins = timeStr.substr(3, 2);
     const timeResult = Number(hour) + Number(mins) / 60;
     return timeResult;
   };
@@ -180,6 +180,11 @@ const getCellContents = (data, rooms) => {
 };
 
 const cleanRawData = (rawData) => {
+  const formatTime = (timeStr) => {
+    const padded = timeStr.padStart(4, "0");
+    const result = `${padded.substr(0, 2)}:${padded.substr(2, 2)}`;
+    return result;
+  }
   const result = rawData
     .filter((row) => {
       return (
@@ -196,8 +201,8 @@ const cleanRawData = (rawData) => {
       "name": `${row["Subject"]} ${row["Course"]}`,
       "title": row["Title"],
       "courseId": row["CRN"],
-      "startTime": row["Start Time"],
-      "endTime": row["End Time"],
+      "startTime": formatTime(row["Start Time"]),
+      "endTime": formatTime(row["End Time"]),
       "days": row["Days"],
       "roomNumber": row["Room"],
     }));
