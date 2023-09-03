@@ -83,8 +83,13 @@ const renderCalendarHtml = (data) => {
         if (index === 0) {
           return `<th scope="row">${col.textContents}</th>`;
         } else {
-          const cellStyle = Object.entries(col.style).map(([k, v]) => `${k}:${v}`).join(';')
-          return `<td style="${cellStyle}">${col.textContents}</td>`
+          const cellStyle = col.style
+            ? `style="${Object.entries(col.style).map(([k, v]) => `${k}:${v}`).join(';')}"`
+            : "";
+          const cellClass = col.cssClass
+            ? `class=${col.cssClass}`
+            : "";
+          return `<td ${cellClass} ${cellStyle}>${col.textContents}</td>`
         }
       }).join("\n")
       + `</tr>`
@@ -122,8 +127,9 @@ const getCellContents = (data, rooms) => {
       // Set first col to time.
       textContents: c === 0 ? timeForRow(r) : " ",
       style: {
-        "background-color": "white",
-      }
+        "background-color": undefined,
+      },
+      cssClass: "emptyCell"
     }
   )));
 
@@ -153,14 +159,18 @@ const getCellContents = (data, rooms) => {
       range(lastRow - firstRow + 1).forEach(i => {
         row = i + firstRow;
         const cellColor = getColor(course.name);
-        cellsInGrid[row][col].style["background-color"] = cellColor;
-        cellsInGrid[row][col].style["color"] = pickTextColorBasedOnBgColorSimple(cellColor, "white", "black");
+        const currentCell = cellsInGrid[row][col];
+        currentCell.style["background-color"] = cellColor;
+        currentCell.style["color"] = pickTextColorBasedOnBgColorSimple(cellColor, "white", "black");
+        currentCell.cssClass = "courseCell";
         if (row === firstRow) {
-          cellsInGrid[row][col].textContents += course.startTime;
+          currentCell.textContents += course.startTime;
+          currentCell.cssClass = "courseTopCell";
         } else if (row === middleRow) {
-          cellsInGrid[row][col].textContents += course.name;
+          currentCell.textContents += course.name;
         } else if (row === lastRow) {
-          cellsInGrid[row][col].textContents += course.endTime;
+          currentCell.textContents += course.endTime;
+          currentCell.cssClass = "courseBottomCell";
         }
       });
     })
