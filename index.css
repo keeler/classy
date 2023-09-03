@@ -9,9 +9,10 @@ html, body, svg {
 }
 
 table {
-  /* width: 100%; */
+  width: 100%;
   border: 1px solid black;
   border-collapse: collapse;
+  font-size: small;
 }
 
 th {

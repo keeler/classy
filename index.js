@@ -75,6 +75,7 @@ const renderCalendarHtml = (data) => {
     + `</tr>`
   );
 
+  // Render courses as cells in table.
   const cells = getCellContents(data, rooms);
   calendar += cells.map(row => {
     const rowContents = (
