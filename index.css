@@ -4,8 +4,9 @@ html, body, svg {
   margin: 0;
 }
 
-:root {
-  --innerBorderColor: lightGrey;
+body{
+  -webkit-print-color-adjust:exact !important;
+  print-color-adjust:exact !important;
 }
 
 table {
@@ -23,6 +24,10 @@ th {
 td {
   text-align: center;
   border-collapse: collapse;
+}
+
+:root {
+  --innerBorderColor: lightGrey;
 }
 
 .courseTopCell {
