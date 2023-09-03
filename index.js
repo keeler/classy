@@ -76,7 +76,6 @@ const renderCalendarHtml = (data) => {
   );
 
   const cells = getCellContents(data, rooms);
-  console.log(cells.map(cellRow => cellRow.filter(cell => cell.style.color !== "white")));
   calendar += cells.map(row => {
     const rowContents = (
       `<tr>`
@@ -84,7 +83,8 @@ const renderCalendarHtml = (data) => {
         if (index === 0) {
           return `<th scope="row">${col.textContents}</th>`;
         } else {
-          return `<td style="background-color:${col.style.color}">${col.textContents}</td>`
+          const cellStyle = Object.entries(col.style).map(([k, v]) => `${k}:${v}`).join(';')
+          return `<td style="${cellStyle}">${col.textContents}</td>`
         }
       }).join("\n")
       + `</tr>`
@@ -112,7 +112,7 @@ const getCellContents = (data, rooms) => {
       // Set first col to time.
       textContents: c === 0 ? timeForRow(r) : " ",
       style: {
-        color: "white",
+        "background-color": "white",
       }
     }
   )));
@@ -147,9 +147,9 @@ const getCellContents = (data, rooms) => {
 
       range(lastRow - firstRow + 1).forEach(i => {
         row = i + firstRow;
-        const color = getColor(course.name);
-        console.log("COLOR", course.name, color)
-        cellsInGrid[row][col].style.color = getColor(course.name);
+        const cellColor = getColor(course.name);
+        cellsInGrid[row][col].style["background-color"] = cellColor;
+        cellsInGrid[row][col].style["color"] = pickTextColorBasedOnBgColorSimple(cellColor, "white", "black");
         if (row === firstRow) {
           cellsInGrid[row][col].textContents += course.startTime;
         } else if (row === middleRow) {
@@ -209,6 +209,15 @@ const parseCsvRow = (row) => {
   });
   entries.push(entry.join(''));
   return entries;
+}
+
+const pickTextColorBasedOnBgColorSimple = (bgColor, lightColor, darkColor) => {
+  var color = (bgColor.charAt(0) === '#') ? bgColor.substring(1, 7) : bgColor;
+  var r = parseInt(color.substring(0, 2), 16); // hexToR
+  var g = parseInt(color.substring(2, 4), 16); // hexToG
+  var b = parseInt(color.substring(4, 6), 16); // hexToB
+  return (((r * 0.299) + (g * 0.587) + (b * 0.114)) > 186) ?
+    darkColor : lightColor;
 }
 
 const range = (n) => [...Array(n).keys()];
