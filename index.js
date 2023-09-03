@@ -1,8 +1,8 @@
 const COLORS = ['#88CCEE', '#44AA99', '#117733', '#332288', '#DDCC77', '#999933','#CC6677', '#882255', '#AA4499', '#DDDDDD']
 const WEEKDAYS = "MTWRF".split("");
 const WEEKDAY_LABELS = ["Mondays", "Tuesdays", "Wednesdays", "Thursdays", "Fridays"]
-const MIN_HOUR = 6; // 6am
-const MAX_HOUR = 19;  // 7pm
+const MIN_HOUR = 8; // 8am
+const MAX_HOUR = 22;  // 10pm
 const MINUTES_PER_ROW = 5;
 
 const handleFileUpload = (event) => {
@@ -76,6 +76,7 @@ const renderCalendarHtml = (data) => {
   );
 
   const cells = getCellContents(data, rooms);
+  console.log(cells.map(cellRow => cellRow.filter(cell => cell.style.color !== "white")));
   calendar += cells.map(row => {
     const rowContents = (
       `<tr>`
@@ -83,7 +84,7 @@ const renderCalendarHtml = (data) => {
         if (index === 0) {
           return `<th scope="row">${col.textContents}</th>`;
         } else {
-          return `<td>${"K" + col.textContents}</td>`
+          return `<td style="background-color:${col.style.color}">${col.textContents}</td>`
         }
       }).join("\n")
       + `</tr>`
@@ -100,7 +101,7 @@ const getCellContents = (data, rooms) => {
   const numCols = 1 + WEEKDAYS.length * rooms.length;
   const minutesPerRow = 5;
   const numRows = (MAX_HOUR - MIN_HOUR) * 60 / minutesPerRow;
-  const getTime = (rowNum) => {
+  const timeForRow = (rowNum) => {
     const t = MIN_HOUR * 60 + rowNum * minutesPerRow;
     const h = String(parseInt(t/60)).padStart(2, "0");
     const m = String(parseInt(t % 60)).padStart(2, "0");
@@ -108,7 +109,8 @@ const getCellContents = (data, rooms) => {
   }
   var cellsInGrid = range(numRows).map(r => range(numCols).map(c => (
     {
-      textContents: c === 0 ? getTime(r) : " ",
+      // Set first col to time.
+      textContents: c === 0 ? timeForRow(r) : " ",
       style: {
         color: "white",
       }
@@ -120,27 +122,34 @@ const getCellContents = (data, rooms) => {
     alert("Not enough colors to display all courses");
     return cellsInGrid;
   }
-  const getColor = (courseName) => COLORS[courseName];
+  const getColor = (courseName) => COLORS[courseNames.indexOf(courseName)];
 
   const parseTime = (timeStr) => {
     const hour = timeStr.substr(0, 2);
     const mins = timeStr.substr(2, 2);
-    return Number(hour) + Number(mins) / 60;
+    const timeResult = Number(hour) + Number(mins) / 60;
+    return timeResult;
   };
 
   data.forEach((course) => {
     course.days.split("").forEach((day) => {
       const startTime = parseTime(course.startTime);
-      const endTime = parseTime(course.startTime);
+      const endTime = parseTime(course.endTime);
 
-      const col = 1 + WEEKDAYS.indexOf(day) * rooms.length + rooms.indexOf(course.roomNumber);
-      const firstRow = parseInt((startTime - MIN_HOUR) * 60 / minutesPerRow);
-      const lastRow = parseInt((endTime - MIN_HOUR) * 60 / minutesPerRow);
-      const middleRow = parseInt((lastRow - firstRow) / 2);
+      const col = (
+        1 // For time column
+        + WEEKDAYS.indexOf(day) * rooms.length
+        + rooms.indexOf(course.roomNumber)
+      );
+      const firstRow = Math.trunc((startTime - MIN_HOUR) * 60 / minutesPerRow);
+      const lastRow = Math.trunc((endTime - MIN_HOUR) * 60 / minutesPerRow);
+      const middleRow = Math.trunc((lastRow + firstRow) / 2);
 
-      range(lastRow - firstRow).forEach(i => {
+      range(lastRow - firstRow + 1).forEach(i => {
         row = i + firstRow;
-        cellsInGrid[row][col].style["bgcolor"] = getColor(course.name);
+        const color = getColor(course.name);
+        console.log("COLOR", course.name, color)
+        cellsInGrid[row][col].style.color = getColor(course.name);
         if (row === firstRow) {
           cellsInGrid[row][col].textContents += course.startTime;
         } else if (row === middleRow) {
