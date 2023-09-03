@@ -41,7 +41,6 @@ const parseAndRenderFile = (event) => {
   root.innerHTML = calendarHtml;
 };
 
-
 const renderCalendarHtml = (data) => {
   const rooms = unique(data.map(x => x.roomNumber)).sort();
   var calendar = "<table>"
