@@ -117,16 +117,18 @@ const getCellContents = (data, rooms) => {
     }
   )));
 
-  const courseNames = unique(data.map(x => x.name)).sort();
+  // Map course names to colors. Some courses have class and lab, e.g. 210 and 210L.
+  // The lab and class of the same course should have the same color.
+  const courseNames = unique(data.map(x => x.name.replace(/L$/, ''))).sort();
   if (courseNames.length > COLORS.length) {
     alert("Not enough colors to display all courses");
     return cellsInGrid;
   }
-  const getColor = (courseName) => COLORS[courseNames.indexOf(courseName)];
+  const getColor = (courseName) => COLORS[courseNames.indexOf(courseName.replace(/L$/, ''))];
 
   const parseTime = (timeStr) => {
-    const hour = timeStr.substr(0, 2);
-    const mins = timeStr.substr(2, 2);
+    const hour = timeStr.padStart(4, "0").substr(0, 2);
+    const mins = timeStr.padStart(4, "0").substr(2, 2);
     const timeResult = Number(hour) + Number(mins) / 60;
     return timeResult;
   };
