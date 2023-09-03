@@ -76,22 +76,19 @@ const renderCalendarHtml = (data) => {
   );
 
   const cells = getCellContents(data, rooms);
-  console.log(cells)
   calendar += cells.map(row => {
-    console.log("ROW", row)
     const rowContents = (
       `<tr>`
       + row.map((col, index) => {
-          if (index === 0) {
-            return `<th scope="row">${"D" + col.textContents}</th>`;
-          } else {
-            return `<td>${"K" + col.textContents}</td>`
-          }
+        if (index === 0) {
+          return `<th scope="row">${col.textContents}</th>`;
+        } else {
+          return `<td>${"K" + col.textContents}</td>`
+        }
       }).join("\n")
       + `</tr>`
     )
-    console.log("rowContents", rowContents)
-    return rowContents
+    return rowContents;
   }).join("\n");
 
   calendar += "</table>";
@@ -103,8 +100,19 @@ const getCellContents = (data, rooms) => {
   const numCols = 1 + WEEKDAYS.length * rooms.length;
   const minutesPerRow = 5;
   const numRows = (MAX_HOUR - MIN_HOUR) * 60 / minutesPerRow;
-  var cellsInGrid = range(numRows).map(_ => range(numCols).map(_ => (
-    {textContents: "", style: {}}
+  const getTime = (rowNum) => {
+    const t = MIN_HOUR * 60 + rowNum * minutesPerRow;
+    const h = String(parseInt(t/60)).padStart(2, "0");
+    const m = String(parseInt(t % 60)).padStart(2, "0");
+    return `${h}:${m}`
+  }
+  var cellsInGrid = range(numRows).map(r => range(numCols).map(c => (
+    {
+      textContents: c === 0 ? getTime(r) : " ",
+      style: {
+        color: "white",
+      }
+    }
   )));
 
   const courseNames = unique(data.map(x => x.name)).sort();
