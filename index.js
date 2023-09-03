@@ -1,8 +1,6 @@
 const COLORS = ['#88CCEE', '#44AA99', '#117733', '#332288', '#DDCC77', '#999933','#CC6677', '#882255', '#AA4499', '#DDDDDD']
 const WEEKDAYS = "MTWRF".split("");
 const WEEKDAY_LABELS = ["Mondays", "Tuesdays", "Wednesdays", "Thursdays", "Fridays"]
-const MIN_HOUR = 8; // 8am
-const MAX_HOUR = 22;  // 10pm
 const MINUTES_PER_ROW = 5;
 
 const handleFileUpload = (event) => {
@@ -96,12 +94,22 @@ const renderCalendarHtml = (data) => {
 }
 
 const getCellContents = (data, rooms) => {
+  const parseTime = (timeStr) => {
+    const hour = timeStr.padStart(4, "0").substr(0, 2);
+    const mins = timeStr.padStart(4, "0").substr(2, 2);
+    const timeResult = Number(hour) + Number(mins) / 60;
+    return timeResult;
+  };
+
+  const minHour = Math.trunc(Math.min(...data.map(x => parseTime(x.startTime))));
+  const maxHour = Math.trunc(Math.max(...data.map(x => parseTime(x.endTime)))) + 1;
+
   // One col for time, then for each room on each weekday.
   const numCols = 1 + WEEKDAYS.length * rooms.length;
   const minutesPerRow = 5;
-  const numRows = (MAX_HOUR - MIN_HOUR) * 60 / minutesPerRow;
+  const numRows = (maxHour - minHour) * 60 / minutesPerRow;
   const timeForRow = (rowNum) => {
-    const t = MIN_HOUR * 60 + rowNum * minutesPerRow;
+    const t = minHour * 60 + rowNum * minutesPerRow;
     const h = String(parseInt(t/60)).padStart(2, "0");
     const m = String(parseInt(t % 60)).padStart(2, "0");
     return `${h}:${m}`
@@ -125,13 +133,6 @@ const getCellContents = (data, rooms) => {
   }
   const getColor = (courseName) => COLORS[courseNames.indexOf(courseName.replace(/L$/, ''))];
 
-  const parseTime = (timeStr) => {
-    const hour = timeStr.padStart(4, "0").substr(0, 2);
-    const mins = timeStr.padStart(4, "0").substr(2, 2);
-    const timeResult = Number(hour) + Number(mins) / 60;
-    return timeResult;
-  };
-
   data.forEach((course) => {
     course.days.split("").forEach((day) => {
       const startTime = parseTime(course.startTime);
@@ -142,8 +143,8 @@ const getCellContents = (data, rooms) => {
         + WEEKDAYS.indexOf(day) * rooms.length
         + rooms.indexOf(course.roomNumber)
       );
-      const firstRow = Math.trunc((startTime - MIN_HOUR) * 60 / minutesPerRow);
-      const lastRow = Math.trunc((endTime - MIN_HOUR) * 60 / minutesPerRow);
+      const firstRow = Math.trunc((startTime - minHour) * 60 / minutesPerRow);
+      const lastRow = Math.trunc((endTime - minHour) * 60 / minutesPerRow);
       const middleRow = Math.trunc((lastRow + firstRow) / 2);
 
       range(lastRow - firstRow + 1).forEach(i => {
