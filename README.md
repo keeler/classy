@@ -1,6 +1,6 @@
 # Classy
 
-Hi Mom!
+Hi Mom! :heart:
 
 This is a tool to help you visualize courses and what rooms they're scheduled to occupy.
 
