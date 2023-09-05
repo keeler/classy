@@ -5,6 +5,11 @@ html, body, svg {
 }
 
 /*
+* Make it so page nubmers, file name, etc. are not included when printing.
+*/
+@page { size: auto;  margin: 0mm; }
+
+/*
 * Make it so some elements are omitted when printing.
 */
 @media print{
