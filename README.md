@@ -10,10 +10,12 @@ This is a tool to help you visualize courses and what rooms they're scheduled to
 
 ## How to get the app
 
-1. Click "Code" in the top right.
+1. Click the green "Code" button in the top right of this page.
 1. Click "Download ZIP".
-1. Unzip the .zip file that you downloaded.
-1. You can now open the `index.html` file in the folder you unzipped to use the app (see below).
+1. Unzip the .zip file that you downloaded into its own folder. The folder you unzipped to should now contain files such as `index.html` and `index.js`.
+1. The app is now ready to use! See instructions below to run the app.
+
+![how-to-download-app](./screencaps/how-to-download-app.png)
 
 ## How to run the app
 
