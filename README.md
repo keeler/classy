@@ -28,19 +28,18 @@ Once you have downloaded and unzipped the app somewhere on your machine:
 
 Once you have the app running in your browser:
 
-1. Save a report from Excel in *UTF-8* `.csv` file format (not Mac or Windows CSV format).
-1. You will see an interface to upload a file. Click "Browse..." and select the CSV you saved in step 1.
-    1. It should look like this ![filebrowse-interface-screenshot](./screencaps/browse-interface.png)
+1. Save a report from Excel in **UTF-8** `.csv` file format (not Mac or Windows CSV format).
+1. You will see a button called "Browse...". Click the "Browse..." button and select the CSV you just saved in step 1.
 1. You should now see a visualization of the schedule broken down by room, something like the screencaps below.
-    1. If you don't, call me and I'll fix it!
-1. Once you've uploaded a file, you can change the granularity of the rows from e.g. every 5 minutes to every 10 minutes with a dropdown that should look like this: ![mins-per-row-select](./screencaps/mins-per-row-select.png).
+    1. **If you don't, call me and I'll fix it!**
 
 ### Notes on usage
 
 - You can use Ctrl + P to print the page. Only the course schedule visualization should be printed.
+- You can update the "Minutes per row" dropdown to change how much time each row represents.
 - You don't need to remove columns from the report before saving as a `.csv`.
 - If you don't want to see a course, remove its row from your Excel sheet before saving as a `.csv`.
-    - *The app will automatically filter out...*:
+    - **The app will automatically ignore**:
         - Courses in rooms that are not in building `HH`.
         - Courses with status "Reserved".
         - Courses with no start time, end time, or room number.
