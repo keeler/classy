@@ -2,6 +2,8 @@ const COLORS = ['#88CCEE', '#44AA99', '#117733', '#332288', '#DDCC77', '#999933'
 const WEEKDAYS = "MTWRF".split("");
 const WEEKDAY_LABELS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
 
+var MINUTES_PER_ROW = 10;
+
 const handleFileUpload = (event) => {
   if (event.target.files.length > 1) {
     alert("Only one file upload allowed at a time.");
@@ -21,6 +23,24 @@ const handleFileUpload = (event) => {
 
 document.getElementById('fileinput').addEventListener('change', handleFileUpload);
 
+const handleMinsPerRowChange = () => {
+  MINUTES_PER_ROW = parseInt(document.getElementById("minsPerRowSelect").value);
+
+  const uploadedFiles = document.getElementById("fileinput").files;
+  if (uploadedFiles.length < 1) {
+    return;
+  }
+
+  const file = uploadedFiles[0];
+  if (!file) {
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = parseAndRenderFile;
+  reader.readAsText(file);
+}
+
 const parseAndRenderFile = (event) => {
   const contents = event.target.result;
   const lines = contents.split("\n");
@@ -37,9 +57,6 @@ const parseAndRenderFile = (event) => {
   const calendarHtml = renderCalendarHtml(cleanData);
   const root = document.getElementById("root");
   root.innerHTML = calendarHtml;
-
-  // Remove the file upload input.
-  document.getElementById("fileinput").outerHTML = "";
 };
 
 const renderCalendarHtml = (data) => {
@@ -115,10 +132,9 @@ const getCellContents = (data, rooms) => {
 
   // One col for time, then for each room on each weekday.
   const numCols = 1 + WEEKDAYS.length * rooms.length;
-  const minutesPerRow = 5;
-  const numRows = (maxHour - minHour) * 60 / minutesPerRow;
+  const numRows = (maxHour - minHour) * 60 / MINUTES_PER_ROW;
   const timeForRow = (rowNum) => {
-    const t = minHour * 60 + rowNum * minutesPerRow;
+    const t = minHour * 60 + rowNum * MINUTES_PER_ROW;
     const h = String(parseInt(t / 60)).padStart(2, "0");
     const m = String(parseInt(t % 60)).padStart(2, "0");
     return `${h}:${m}`
@@ -166,8 +182,8 @@ const getCellContents = (data, rooms) => {
         + WEEKDAYS.indexOf(day) * rooms.length
         + rooms.indexOf(course.roomNumber)
       );
-      const firstRow = Math.trunc((startTime - minHour) * 60 / minutesPerRow);
-      const lastRow = Math.trunc((endTime - minHour) * 60 / minutesPerRow);
+      const firstRow = Math.trunc((startTime - minHour) * 60 / MINUTES_PER_ROW);
+      const lastRow = Math.trunc((endTime - minHour) * 60 / MINUTES_PER_ROW);
       const middleRow = Math.trunc((lastRow + firstRow) / 2);
 
       range(lastRow - firstRow + 1).forEach(i => {
@@ -181,14 +197,12 @@ const getCellContents = (data, rooms) => {
           currentCell.textContents += course.startTime;
           currentCell.cssClass = "courseTopCell";
         } else if (row === middleRow) {
-          const twoCellsBefore = cellsInGrid[row - 2][col];
-          twoCellsBefore.textContents += course.subject;
-          const previousCell = cellsInGrid[row - 1][col];
-          previousCell.textContents += course.number;
-          const middleCell = cellsInGrid[row][col];
-          middleCell.textContents += "Room";
-          const nextCell = cellsInGrid[row + 1][col];
-          nextCell.textContents += course.roomNumber;
+          const courseLabel = [course.subject, course.number, "Room", course.roomNumber];
+          courseLabel.forEach((textValue, index) => {
+            const rowOffset = -1;
+            const cellAtIndex = cellsInGrid[row + index + rowOffset][col];
+            cellAtIndex.textContents = textValue;
+          })
         } else if (row === lastRow) {
           currentCell.textContents += course.endTime;
           currentCell.cssClass = "courseBottomCell";

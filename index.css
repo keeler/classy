@@ -5,6 +5,15 @@ html, body, svg {
 }
 
 /*
+* Make it so some elements are omitted when printing.
+*/
+@media print{
+  .noprint{
+      display:none;
+  }
+}
+
+/*
 * Make it so background colors of table will print w/ ctrl + p.
 */
 body{

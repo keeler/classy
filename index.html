@@ -7,7 +7,19 @@
     <link rel="stylesheet" href="index.css">
   </head>
   <body>
-    <input type="file" id="fileinput" />
+    <div class="noprint">
+      <div style="display:inline-block">
+        <p>Upload a .csv of courses:</p>
+        <input id="fileinput" type="file" />
+      </div>
+      <div style="display:inline-block">
+        <p>Minutes per row:</p>
+        <select id="minsPerRowSelect" onchange="handleMinsPerRowChange()">
+          <option value="5">5</option>
+          <option value="10" selected="selected">10</option>
+        </select>
+      </div>
+    </div>
     <div id="root"></div>
     <script src="./index.js"></script>
   </body>
