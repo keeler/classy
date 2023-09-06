@@ -8,17 +8,49 @@
   </head>
   <body>
     <div class="noprint">
-      <div style="display:inline-block">
-        <p>Upload a .csv of courses:</p>
-        <input id="fileinput" type="file" />
-      </div>
-      <div style="display:inline-block">
-        <p>Minutes per row:</p>
-        <select id="minsPerRowSelect" onchange="handleMinsPerRowChange()">
-          <option value="5">5</option>
-          <option value="10" selected="selected">10</option>
-        </select>
-      </div>
+      <form class="control-panel">
+        <legend style="font-size: larger;">Control Panel</legend>
+
+        <br>
+
+        <fieldset class="no-border">
+          <label for="fileinput">Select a course CSV</label>
+          <input id="fileinput" type="file" />
+        </fieldset>
+
+        <br>
+
+        <fieldset class="no-border">
+          <label for="minsPerRowSelect">Time interval</label>
+          <select id="minsPerRowSelect" onchange="handleMinsPerRowChange()">
+            <option value="5">5</option>
+            <option value="10" selected="selected">10</option>
+          </select>
+        </fieldset>
+
+        <br>
+
+        <fieldset>
+          <legend>Breakdown</legend>
+          <input
+            type="radio"
+            id="breakdown-by-room"
+            name="breakdown"
+            value="room"
+            onclick="handleBreakdownChanged(this)"
+            checked />
+          <label for="breakdown-by-room">Room</label>
+
+          <input
+            type="radio"
+            id="breakdown-by-course"
+            name="breakdown"
+            value="course"
+            onclick="handleBreakdownChanged(this)"
+          />
+          <label for="breakdown-by-course">Course</label>
+        </fieldset>
+      </form>
     </div>
     <div id="root"></div>
     <script src="./index.js"></script>

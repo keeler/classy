@@ -1,8 +1,13 @@
-const COLORS = ['#88CCEE', '#44AA99', '#117733', '#332288', '#DDCC77', '#999933', '#CC6677', '#882255', '#AA4499', '#DDDDDD']
+const COLORS = ["rgb(32,142,183)", "rgb(132,36,26)", "rgb(134,204,49)", "rgb(166,29,153)", "rgb(20,229,75)", "rgb(249,104,195)", "rgb(79,133,34)", "rgb(123,38,229)", "rgb(219,201,7)", "rgb(31,55,120)", "rgb(35,219,225)", "rgb(243,59,93)", "rgb(11,69,18)", "rgb(228,184,236)", "rgb(80,53,37)", "rgb(167,205,216)", "rgb(173,118,107)", "rgb(83,113,213)", "rgb(246,147,46)", "rgb(194,205,132)"]
 const WEEKDAYS = "MTWRF".split("");
 const WEEKDAY_LABELS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
 
 var MINUTES_PER_ROW = 10;
+var BREAKDOWN = "room";
+
+// Reset to breakdown radio button on page reload.
+const defaultBreakdownRadio = document.getElementById(`breakdown-by-${BREAKDOWN}`);
+defaultBreakdownRadio.checked = true;
 
 const handleFileUpload = (event) => {
   if (event.target.files.length > 1) {
@@ -23,9 +28,7 @@ const handleFileUpload = (event) => {
 
 document.getElementById('fileinput').addEventListener('change', handleFileUpload);
 
-const handleMinsPerRowChange = () => {
-  MINUTES_PER_ROW = parseInt(document.getElementById("minsPerRowSelect").value);
-
+const renderIfFilePresent = () => {
   const uploadedFiles = document.getElementById("fileinput").files;
   if (uploadedFiles.length < 1) {
     return;
@@ -39,6 +42,16 @@ const handleMinsPerRowChange = () => {
   const reader = new FileReader();
   reader.onload = parseAndRenderFile;
   reader.readAsText(file);
+}
+
+const handleMinsPerRowChange = () => {
+  MINUTES_PER_ROW = parseInt(document.getElementById("minsPerRowSelect").value);
+  renderIfFilePresent();
+}
+
+const handleBreakdownChanged = (radio) => {
+  BREAKDOWN = radio.value;
+  renderIfFilePresent();
 }
 
 const parseAndRenderFile = (event) => {
@@ -60,14 +73,21 @@ const parseAndRenderFile = (event) => {
 };
 
 const renderCalendarHtml = (data) => {
-  const rooms = unique(data.map(x => x.roomNumber)).sort();
+  const filteredData = data.filter(course => {
+    if (BREAKDOWN === "room") {
+      // If showing breakdown by room, remove courses with no room.
+      return course.building === "HH" && course.roomNumber;
+    }
+    return true;
+  });
+  const breakdown = unique(filteredData.map(course => getBreakdownField(course))).sort();
   var calendar = "<table>"
 
   // Set up multi-column header.
   calendar += (
     "<col>"
     + WEEKDAYS.map(x => (
-      `<colgroup span="${rooms.length}"></colgroup>`
+      `<colgroup span="${breakdown.length}"></colgroup>`
     )).join("")
   );
 
@@ -76,7 +96,7 @@ const renderCalendarHtml = (data) => {
     `<tr>`
     + `<td rowspan="2"><b>Time</b<</td>`
     + WEEKDAYS.map((_, i) => (
-      `<th colspan="${rooms.length}" scope="colgroup">${WEEKDAY_LABELS[i]}</th>`
+      `<th colspan="${breakdown.length}" scope="colgroup">${WEEKDAY_LABELS[i]}</th>`
     )).join("\n")
     + `</tr>`
   );
@@ -85,15 +105,15 @@ const renderCalendarHtml = (data) => {
   calendar += (
     `<tr>`
     + WEEKDAYS.map(weekday => (
-      rooms.map(room => (
-        `<th scope="col">${room}</th>`
+      breakdown.map(category => (
+        `<th scope="col">${category}</th>`
       )).join("\n")
     )).join("\n")
     + `</tr>`
   );
 
   // Render courses as cells in table.
-  const cells = getCellContents(data, rooms);
+  const cells = getCellContents(filteredData, breakdown);
   calendar += cells.map(row => {
     const rowContents = (
       `<tr>`
@@ -119,7 +139,7 @@ const renderCalendarHtml = (data) => {
   return calendar;
 }
 
-const getCellContents = (data, rooms) => {
+const getCellContents = (data, breakdown) => {
   const parseTime = (timeStr) => {
     const hour = timeStr.substr(0, 2);
     const mins = timeStr.substr(3, 2);
@@ -131,7 +151,7 @@ const getCellContents = (data, rooms) => {
   const maxHour = Math.trunc(Math.max(...data.map(x => parseTime(x.endTime)))) + 1;
 
   // One col for time, then for each room on each weekday.
-  const numCols = 1 + WEEKDAYS.length * rooms.length;
+  const numCols = 1 + WEEKDAYS.length * breakdown.length;
   const numRows = (maxHour - minHour) * 60 / MINUTES_PER_ROW;
   const timeForRow = (rowNum) => {
     const t = minHour * 60 + rowNum * MINUTES_PER_ROW;
@@ -144,7 +164,7 @@ const getCellContents = (data, rooms) => {
       const dayOfWeek = (
         Math.trunc(
           (c - 1)  // Subtract first col for time.
-          / rooms.length
+          / breakdown.length
         )
       )
       return [1, 3].includes(dayOfWeek)
@@ -167,7 +187,7 @@ const getCellContents = (data, rooms) => {
   // The lab and class of the same course should have the same color.
   const courseNames = unique(data.map(x => x.name.replace(/L$/, ''))).sort();
   if (courseNames.length > COLORS.length) {
-    alert("Not enough colors to display all courses");
+    alert(`I only know ${COLORS.length} colors but you gave me ${courseNames.length} courses to display.`);
     return cellsInGrid;
   }
   const getColor = (courseName) => COLORS[courseNames.indexOf(courseName.replace(/L$/, ''))];
@@ -179,8 +199,8 @@ const getCellContents = (data, rooms) => {
 
       const col = (
         1 // For time column
-        + WEEKDAYS.indexOf(day) * rooms.length
-        + rooms.indexOf(course.roomNumber)
+        + WEEKDAYS.indexOf(day) * breakdown.length
+        + breakdown.indexOf(getBreakdownField(course))
       );
       const firstRow = Math.trunc((startTime - minHour) * 60 / MINUTES_PER_ROW);
       const lastRow = Math.trunc((endTime - minHour) * 60 / MINUTES_PER_ROW);
@@ -197,7 +217,7 @@ const getCellContents = (data, rooms) => {
           currentCell.textContents += course.startTime;
           currentCell.cssClass = "courseTopCell";
         } else if (row === middleRow) {
-          const courseLabel = [course.subject, course.number, "Room", course.roomNumber];
+          const courseLabel = [course.subject, course.number, "Room", course.roomNumber || "N/A"];
           courseLabel.forEach((textValue, index) => {
             const rowOffset = -1;
             const cellAtIndex = cellsInGrid[row + index + rowOffset][col];
@@ -223,11 +243,9 @@ const cleanRawData = (rawData) => {
   const result = rawData
     .filter((row) => {
       return (
-        row["Status"] !== "Reserved" &&
-        row["Start Time"] &&
-        row["End Time"] &&
-        row["Room"] &&
-        row["Bldg"] == "HH"
+        row["Status"] !== "Reserved"
+        && row["Start Time"]
+        && row["End Time"]
       );
     })
     .map((row) => ({
@@ -239,6 +257,7 @@ const cleanRawData = (rawData) => {
       "startTime": formatTime(row["Start Time"]),
       "endTime": formatTime(row["End Time"]),
       "days": row["Days"],
+      "building": row["Bldg"],
       "roomNumber": row["Room"],
     }));
 
@@ -275,5 +294,13 @@ const pickTextColorBasedOnBgColorSimple = (bgColor, lightColor, darkColor) => {
     darkColor : lightColor;
 }
 
+const getBreakdownField = (course) => {
+  switch (BREAKDOWN) {
+    case "room":
+      return course.roomNumber;
+    case "course":
+      return course.number;
+  }
+}
 const range = (n) => [...Array(n).keys()];
 const unique = (items) => [...new Set(items)];
