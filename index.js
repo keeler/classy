@@ -76,7 +76,7 @@ const renderCalendarHtml = (data) => {
   const filteredData = data.filter(course => {
     if (BREAKDOWN === "room") {
       // If showing breakdown by room, remove courses with no room.
-      return course.building === "HH" && course.roomNumber;
+      return course.roomNumber;
     }
     return true;
   });
@@ -217,7 +217,13 @@ const getCellContents = (data, breakdown) => {
           currentCell.textContents += course.startTime;
           currentCell.cssClass = "courseTopCell";
         } else if (row === middleRow) {
-          const courseLabel = [course.subject, course.number, "Room", course.roomNumber || "N/A"];
+          const courseLabel = [
+            course.subject,
+            course.number,
+            course.roomNumber
+              ? `${course.building}${course.roomNumber}`
+              : "N/A"
+          ];
           courseLabel.forEach((textValue, index) => {
             const rowOffset = -1;
             const cellAtIndex = cellsInGrid[row + index + rowOffset][col];
