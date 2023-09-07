@@ -245,13 +245,21 @@ const cleanRawData = (rawData) => {
     const padded = timeStr.padStart(4, "0");
     const result = `${padded.substr(0, 2)}:${padded.substr(2, 2)}`;
     return result;
-  }
+  };
+
+  const formatInstructorName = (name) => {
+    const [lastName, firstName] = name.split(",");
+    const firstInitial = firstName.trimStart(" ")[0];
+    return `${lastName}, ${firstInitial}`;
+  };
+
   const result = rawData
     .filter((row) => {
       return (
         row["Status"] !== "Reserved"
         && row["Start Time"]
         && row["End Time"]
+        && row["Instructor"]
       );
     })
     .map((row) => ({
@@ -265,6 +273,7 @@ const cleanRawData = (rawData) => {
       "days": row["Days"],
       "building": row["Bldg"],
       "roomNumber": row["Room"],
+      "instructor": formatInstructorName(row["Instructor"]),
     }));
 
   return result;
@@ -306,6 +315,8 @@ const getBreakdownField = (course) => {
       return course.roomNumber;
     case "course":
       return course.number;
+    case "instructor":
+      return course.instructor;
   }
 }
 const range = (n) => [...Array(n).keys()];
