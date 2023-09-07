@@ -38,13 +38,13 @@ Once you have the app running in your browser:
 ### Notes on usage
 
 - You can use Ctrl + P to print the page. Only the course schedule visualization should be printed.
-- You can update the "Minutes per row" dropdown to change how much time each row represents.
+- You can update the "Time interval" dropdown to change how much time each row represents.
+- You can change the table to show columns by room number or by course number.
 - You don't need to remove columns from the report before saving as a `.csv`.
 - If you don't want to see a course, remove its row from your Excel sheet before saving as a `.csv`.
     - **The app will automatically ignore**:
-        - Courses in rooms that are not in building `HH`.
         - Courses with status "Reserved".
-        - Courses with no start time, end time, or room number.
+        - Courses with no start time or end time.
 
 ## Screencaps
 
