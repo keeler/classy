@@ -32,7 +32,7 @@ label {
 */
 @media print{
   .noprint {
-      display: none;
+    display: none;
   }
 }
 
@@ -60,6 +60,7 @@ th {
 td {
   text-align: center;
   border-collapse: collapse;
+
 }
 
 :root {

@@ -1,4 +1,4 @@
-const COLORS = ["rgb(32,142,183)", "rgb(132,36,26)", "rgb(134,204,49)", "rgb(166,29,153)", "rgb(20,229,75)", "rgb(249,104,195)", "rgb(79,133,34)", "rgb(123,38,229)", "rgb(219,201,7)", "rgb(31,55,120)", "rgb(35,219,225)", "rgb(243,59,93)", "rgb(11,69,18)", "rgb(228,184,236)", "rgb(80,53,37)", "rgb(167,205,216)", "rgb(173,118,107)", "rgb(83,113,213)", "rgb(246,147,46)", "rgb(194,205,132)"]
+const COLORS = ["rgb(37,102,118)", "rgb(174,248,21)", "rgb(163,53,200)", "rgb(52,245,14)", "rgb(118,13,54)", "rgb(180,243,158)", "rgb(45,33,52)", "rgb(129,244,254)", "rgb(7,21,118)", "rgb(248,227,129)", "rgb(63,22,249)", "rgb(117,174,10)", "rgb(234,133,245)", "rgb(11,83,19)", "rgb(251,9,152)", "rgb(13,243,143)", "rgb(211,69,54)", "rgb(38,176,157)", "rgb(115,86,103)", "rgb(253,165,71)", "rgb(52,81,211)", "rgb(241,241,241)", "rgb(104,60,0)", "rgb(160,163,253)", "rgb(150,162,131)", "rgb(254,22,244)", "rgb(78,166,220)", "rgb(251,159,168)"];
 const WEEKDAYS = "MTWRF".split("");
 const WEEKDAY_LABELS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
 
@@ -302,13 +302,13 @@ const parseCsvRow = (row) => {
   return entries;
 }
 
-const pickTextColorBasedOnBgColorSimple = (bgColor, lightColor, darkColor) => {
-  var color = (bgColor.charAt(0) === '#') ? bgColor.substring(1, 7) : bgColor;
-  var r = parseInt(color.substring(0, 2), 16); // hexToR
-  var g = parseInt(color.substring(2, 4), 16); // hexToG
-  var b = parseInt(color.substring(4, 6), 16); // hexToB
-  return (((r * 0.299) + (g * 0.587) + (b * 0.114)) > 186) ?
-    darkColor : lightColor;
+pickTextColorBasedOnBgColorSimple = (bgColor, lightColor, darkColor) => {
+  const rgba = bgColor.match(/\d+/g);
+  if((rgba[0]*0.299)+(rgba[1]*0.587)+(rgba[2]*0.114)>186) {
+    return darkColor;
+  } else {
+    return lightColor;
+  }
 }
 
 const getBreakdownField = (course) => {
