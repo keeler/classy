@@ -248,6 +248,9 @@ const cleanRawData = (rawData) => {
   };
 
   const formatInstructorName = (name) => {
+    if (!name) {
+      return "N/A";
+    }
     const [lastName, firstName] = name.split(",");
     const firstInitial = firstName.trimStart(" ")[0];
     return `${lastName}, ${firstInitial}`;
@@ -259,7 +262,6 @@ const cleanRawData = (rawData) => {
         row["Status"] !== "Reserved"
         && row["Start Time"]
         && row["End Time"]
-        && row["Instructor"]
       );
     })
     .map((row) => ({
